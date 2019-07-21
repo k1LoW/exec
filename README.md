@@ -1,4 +1,4 @@
-# exec
+# exec [![Build Status](https://travis-ci.org/k1LoW/exec.svg?branch=master)](https://travis-ci.org/k1LoW/exec)
 
 os/exec
 
