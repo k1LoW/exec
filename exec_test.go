@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -77,6 +78,9 @@ func TestCommandContextCancel(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+		go func() {
+			cmd.Wait()
+		}()
 		time.Sleep(100 * time.Millisecond)
 		cancel()
 		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
@@ -86,23 +90,82 @@ func TestCommandContextCancel(t *testing.T) {
 	}
 }
 
-type testcase struct {
-	name string
-	cmd  []string
-	want string
+func TestTerminateCommand(t *testing.T) {
+	tests := gentests(true)
+	for _, tt := range tests {
+		var (
+			stdout bytes.Buffer
+			stderr bytes.Buffer
+		)
+		cmd := Command(tt.cmd[0], tt.cmd[1:]...)
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+		err := cmd.Start()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+		go func() {
+			cmd.Wait()
+		}()
+		time.Sleep(100 * time.Millisecond)
+		err = TerminateCommand(cmd, syscall.SIGTERM)
+		if err != nil && !tt.processFinished {
+			t.Fatalf("%s: %v", tt.name, err)
+		}
+		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
+		if err == nil {
+			t.Errorf("%s", "the process has not exited")
+		}
+	}
 }
 
-func gentests(withSleep bool) []testcase {
+func TestKillCommand(t *testing.T) {
+	tests := gentests(true)
+	for _, tt := range tests {
+		var (
+			stdout bytes.Buffer
+			stderr bytes.Buffer
+		)
+		cmd := Command(tt.cmd[0], tt.cmd[1:]...)
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+		err := cmd.Start()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+		go func() {
+			cmd.Wait()
+		}()
+		time.Sleep(100 * time.Millisecond)
+		err = KillCommand(cmd)
+		if err != nil && !tt.processFinished {
+			t.Fatalf("%s: %v", tt.name, err)
+		}
+		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
+		if err == nil {
+			t.Errorf("%s", "the process has not exited")
+		}
+	}
+}
+
+type testcase struct {
+	name            string
+	cmd             []string
+	want            string
+	processFinished bool
+}
+
+func gentests(withSleepTest bool) []testcase {
 	tests := []testcase{}
 	r := random()
-	tests = append(tests, testcase{"simple echo", []string{"echo", r}, r})
+	tests = append(tests, testcase{"echo", []string{"echo", r}, r, true})
 	r = random()
-	tests = append(tests, testcase{"bash -c echo", []string{"bash", "-c", fmt.Sprintf("echo %s", r)}, r})
-	if withSleep {
+	tests = append(tests, testcase{"bash -c echo", []string{"bash", "-c", fmt.Sprintf("echo %s", r)}, r, true})
+	if withSleepTest {
 		r = "123456"
-		tests = append(tests, testcase{"sleep", []string{"sleep", r}, r})
+		tests = append(tests, testcase{"sleep", []string{"sleep", r}, r, false})
 		r = "654321"
-		tests = append(tests, testcase{"bash -c sleep", []string{"bash", "-c", fmt.Sprintf("sleep %s", r)}, r})
+		tests = append(tests, testcase{"bash -c sleep", []string{"bash", "-c", fmt.Sprintf("sleep %s", r)}, r, false})
 	}
 	return tests
 }
