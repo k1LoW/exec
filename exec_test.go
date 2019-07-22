@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -79,6 +80,52 @@ func TestCommandContextCancel(t *testing.T) {
 		}
 		time.Sleep(100 * time.Millisecond)
 		cancel()
+		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
+		if err == nil {
+			t.Errorf("%s", "the process has not exited")
+		}
+	}
+}
+
+func TestTerminateCommand(t *testing.T) {
+	tests := gentests(true)
+	for _, tt := range tests {
+		var (
+			stdout bytes.Buffer
+			stderr bytes.Buffer
+		)
+		cmd := Command(tt.cmd[0], tt.cmd[1:]...)
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+		err := cmd.Start()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+		time.Sleep(100 * time.Millisecond)
+		_ = TerminateCommand(cmd, syscall.SIGTERM)
+		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
+		if err == nil {
+			t.Errorf("%s", "the process has not exited")
+		}
+	}
+}
+
+func TestKillCommand(t *testing.T) {
+	tests := gentests(true)
+	for _, tt := range tests {
+		var (
+			stdout bytes.Buffer
+			stderr bytes.Buffer
+		)
+		cmd := Command(tt.cmd[0], tt.cmd[1:]...)
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+		err := cmd.Start()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+		time.Sleep(100 * time.Millisecond)
+		_ = KillCommand(cmd)
 		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
 		if err == nil {
 			t.Errorf("%s", "the process has not exited")
