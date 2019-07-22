@@ -78,6 +78,9 @@ func TestCommandContextCancel(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+		go func() {
+			cmd.Wait()
+		}()
 		time.Sleep(100 * time.Millisecond)
 		cancel()
 		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
@@ -101,8 +104,14 @@ func TestTerminateCommand(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+		go func() {
+			cmd.Wait()
+		}()
 		time.Sleep(100 * time.Millisecond)
-		_ = TerminateCommand(cmd, syscall.SIGTERM)
+		err = TerminateCommand(cmd, syscall.SIGTERM)
+		if err != nil && !tt.processFinished {
+			t.Fatalf("%s: %v", tt.name, err)
+		}
 		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
 		if err == nil {
 			t.Errorf("%s", "the process has not exited")
@@ -124,8 +133,14 @@ func TestKillCommand(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
+		go func() {
+			cmd.Wait()
+		}()
 		time.Sleep(100 * time.Millisecond)
-		_ = KillCommand(cmd)
+		err = KillCommand(cmd)
+		if err != nil && !tt.processFinished {
+			t.Fatalf("%s: %v", tt.name, err)
+		}
 		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
 		if err == nil {
 			t.Errorf("%s", "the process has not exited")
@@ -134,22 +149,23 @@ func TestKillCommand(t *testing.T) {
 }
 
 type testcase struct {
-	name string
-	cmd  []string
-	want string
+	name            string
+	cmd             []string
+	want            string
+	processFinished bool
 }
 
 func gentests(withSleepTest bool) []testcase {
 	tests := []testcase{}
 	r := random()
-	tests = append(tests, testcase{"simple echo", []string{"echo", r}, r})
+	tests = append(tests, testcase{"echo", []string{"echo", r}, r, true})
 	r = random()
-	tests = append(tests, testcase{"bash -c echo", []string{"bash", "-c", fmt.Sprintf("echo %s", r)}, r})
+	tests = append(tests, testcase{"bash -c echo", []string{"bash", "-c", fmt.Sprintf("echo %s", r)}, r, true})
 	if withSleepTest {
 		r = "123456"
-		tests = append(tests, testcase{"sleep", []string{"sleep", r}, r})
+		tests = append(tests, testcase{"sleep", []string{"sleep", r}, r, false})
 		r = "654321"
-		tests = append(tests, testcase{"bash -c sleep", []string{"bash", "-c", fmt.Sprintf("sleep %s", r)}, r})
+		tests = append(tests, testcase{"bash -c sleep", []string{"bash", "-c", fmt.Sprintf("sleep %s", r)}, r, false})
 	}
 	return tests
 }
