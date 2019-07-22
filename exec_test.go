@@ -139,13 +139,13 @@ type testcase struct {
 	want string
 }
 
-func gentests(withSleep bool) []testcase {
+func gentests(withSleepTest bool) []testcase {
 	tests := []testcase{}
 	r := random()
 	tests = append(tests, testcase{"simple echo", []string{"echo", r}, r})
 	r = random()
 	tests = append(tests, testcase{"bash -c echo", []string{"bash", "-c", fmt.Sprintf("echo %s", r)}, r})
-	if withSleep {
+	if withSleepTest {
 		r = "123456"
 		tests = append(tests, testcase{"sleep", []string{"sleep", r}, r})
 		r = "654321"
