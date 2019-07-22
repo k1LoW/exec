@@ -48,6 +48,5 @@ func TerminateCommand(cmd *exec.Cmd, sig os.Signal) error {
 }
 
 func KillCommand(cmd *exec.Cmd) error {
-	killall(cmd)
-	return cmd.Process.Kill()
+	return killall(cmd)
 }

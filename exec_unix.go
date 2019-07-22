@@ -58,5 +58,9 @@ func terminate(cmd *exec.Cmd, sig os.Signal) error {
 }
 
 func killall(cmd *exec.Cmd) error {
-	return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+	err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+	if err != nil {
+		return cmd.Process.Kill() // fallback
+	}
+	return nil
 }
