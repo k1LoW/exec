@@ -9,12 +9,12 @@ import (
 )
 ```
 
-## Difference between os/exec and github.com/k1LoW/exec
+## Difference between `os/exec` and `k1LoW/exec`
 
-- `github.com/k1LoW/exec.Command` returns `*os/exec.Cmd` with PGID set.
-- When context cancelled, `github.com/k1LoW/exec.CommandContext` send signal to process group.
+- `k1LoW/exec.Command` returns `*os/exec.Cmd` with PGID set.
+- When context cancelled, `k1LoW/exec.CommandContext` send signal to process group.
 
 ## References
 
 - [Songmu/timeout](https://github.com/Songmu/timeout): Timeout invocation. Go porting of GNU timeout and able to use as Go package
-    - github.com/k1LoW/exec is porting source code to handle processes from [Songmu/timeout](https://github.com/Songmu/timeout)
+    - [k1LoW/exec](https://github.com/k1LoW/exec) is porting source code to handle processes from [Songmu/timeout](https://github.com/Songmu/timeout)
