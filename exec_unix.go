@@ -48,7 +48,7 @@ func terminate(cmd *exec.Cmd, sig os.Signal) error {
 	}
 	err := syscall.Kill(-cmd.Process.Pid, syssig)
 	if err != nil {
-		return err
+		return syscall.Kill(cmd.Process.Pid, syssig) // fallback
 	}
 	if syssig != syscall.SIGKILL && syssig != syscall.SIGCONT {
 		return syscall.Kill(-cmd.Process.Pid, syscall.SIGCONT)
