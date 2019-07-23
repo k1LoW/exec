@@ -6,6 +6,8 @@ import (
 	"syscall"
 )
 
+var defaultSignal = syscall.SIGTERM
+
 // Reference code:
 // https://github.com/Songmu/timeout/blob/9710262dc02f66fdd69a6cd4c8143204006d5843/timeout_unix.go
 

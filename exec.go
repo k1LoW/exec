@@ -13,6 +13,9 @@ type Exec struct {
 }
 
 func (e *Exec) CommandContext(ctx context.Context, name string, arg ...string) *exec.Cmd {
+	if e.Signal == nil {
+		e.Signal = defaultSignal
+	}
 	cmd := command(name, arg...)
 	go func() {
 		select {
@@ -37,7 +40,7 @@ func Command(name string, arg ...string) *exec.Cmd {
 
 func CommandContext(ctx context.Context, name string, arg ...string) *exec.Cmd {
 	e := &Exec{
-		Signal:          os.Kill,
+		Signal:          os.Kill, // Why os.Kill ? => for get close to the behavior of os/exec.ContextCommand
 		KillAfterCancel: -1,
 	}
 	return e.CommandContext(ctx, name, arg...)
