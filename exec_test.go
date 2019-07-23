@@ -165,7 +165,7 @@ func gentests(withSleepTest bool) []testcase {
 		r = "123456"
 		tests = append(tests, testcase{"sleep", []string{"sleep", r}, r, false})
 		r = "654321"
-		tests = append(tests, testcase{"bash -c sleep", []string{"bash", "-c", fmt.Sprintf("sleep %s", r)}, r, false})
+		tests = append(tests, testcase{"bash -c sleep", []string{"bash", "-c", fmt.Sprintf("sleep %s && echo %s", r, r)}, r, false})
 	}
 	return tests
 }
