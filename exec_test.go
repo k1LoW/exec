@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
@@ -28,7 +29,7 @@ func TestCommand(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%v", err)
 		}
-		if strings.TrimSuffix(stdout.String(), "\n") != tt.want {
+		if strings.TrimRight(stdout.String(), "\n\r") != tt.want {
 			t.Errorf("%s: want = %#v, got = %#v", tt.name, tt.want, stdout.String())
 		}
 		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
@@ -53,7 +54,7 @@ func TestCommandContext(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%s: %v", tt.name, err)
 		}
-		if strings.TrimSuffix(stdout.String(), "\n") != tt.want {
+		if strings.TrimRight(stdout.String(), "\n\r") != tt.want {
 			t.Errorf("%s: want = %#v, got = %#v", tt.name, tt.want, stdout.String())
 		}
 		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
@@ -109,7 +110,15 @@ func TestTerminateCommand(t *testing.T) {
 			cmd.Wait()
 		}()
 		time.Sleep(100 * time.Millisecond)
-		err = TerminateCommand(cmd, syscall.SIGTERM)
+
+		if runtime.GOOS == "windows" {
+			sig := os.Interrupt
+			err = TerminateCommand(cmd, sig)
+		} else {
+			sig := syscall.SIGTERM
+			err = TerminateCommand(cmd, sig)
+		}
+
 		if err != nil && !tt.processFinished {
 			t.Fatalf("%s: %v", tt.name, err)
 		}
