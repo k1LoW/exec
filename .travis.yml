@@ -32,12 +32,16 @@ matrix:
         - echo $TRAVIS_GO_VERSION
         - echo $PATH
         - echo $GOPATH
+      script:
+        - go test
     - go: master
       os: windows
       env: GO111MODULE=on
       before_install:
         - echo $TRAVIS_GO_VERSION
+      script:
+        - go test
   allow_failures:
     - go: master
 script:
-  - go test ./...
+  - make ci
