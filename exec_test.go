@@ -27,7 +27,7 @@ func TestCommand(t *testing.T) {
 		cmd.Stderr = &stderr
 		err := cmd.Run()
 		if err != nil {
-			t.Fatalf("%v", err)
+			t.Fatalf("%s: %v", tt.name, err)
 		}
 		if strings.TrimRight(stdout.String(), "\n\r") != tt.want {
 			t.Errorf("%s: want = %#v, got = %#v", tt.name, tt.want, stdout.String())
@@ -78,7 +78,7 @@ func TestCommandContextCancel(t *testing.T) {
 		cmd.Stderr = &stderr
 		err := cmd.Start()
 		if err != nil {
-			t.Fatalf("%v", err)
+			t.Fatalf("%s: %v", tt.name, err)
 		}
 		go func() {
 			cmd.Wait()
@@ -109,8 +109,7 @@ func TestTerminateCommand(t *testing.T) {
 		go func() {
 			cmd.Wait()
 		}()
-		time.Sleep(100 * time.Millisecond)
-
+		time.Sleep(500 * time.Millisecond)
 		if runtime.GOOS == "windows" {
 			sig := os.Interrupt
 			err = TerminateCommand(cmd, sig)
@@ -118,13 +117,12 @@ func TestTerminateCommand(t *testing.T) {
 			sig := syscall.SIGTERM
 			err = TerminateCommand(cmd, sig)
 		}
-
 		if err != nil && !tt.processFinished {
-			t.Fatalf("%s: %v", tt.name, err)
+			t.Errorf("%s: %v", tt.name, err)
 		}
 		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
 		if err == nil {
-			t.Errorf("%s", "the process has not exited")
+			t.Errorf("%s: %s", tt.name, "the process has not exited")
 		}
 	}
 }
@@ -146,14 +144,14 @@ func TestKillCommand(t *testing.T) {
 		go func() {
 			cmd.Wait()
 		}()
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 		err = KillCommand(cmd)
 		if err != nil && !tt.processFinished {
 			t.Fatalf("%s: %v", tt.name, err)
 		}
 		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
 		if err == nil {
-			t.Errorf("%s", "the process has not exited")
+			t.Errorf("%s: %s", tt.name, "the process has not exited")
 		}
 	}
 }
@@ -173,10 +171,10 @@ func gentests(withSleepTest bool) []testcase {
 		r = random()
 		tests = append(tests, testcase{"cmd /c echo", []string{"cmd", "/c", fmt.Sprintf("echo %s", r)}, r, true})
 		if withSleepTest {
-			r = "123456"
-			tests = append(tests, testcase{"timeout", []string{"timeout", r, "/nobreak"}, r, false})
-			r = "654321"
-			tests = append(tests, testcase{"cmd /c timeout", []string{"cmd", "/c", fmt.Sprintf("timeout %s /nobreak && echo %s", r, r)}, r, false})
+			// r = "123456"
+			// tests = append(tests, testcase{"powershell sleep", []string{"powershell", "sleep", r}, r, false})
+			// r = "654321"
+			// tests = append(tests, testcase{"bash -c powershell sleep", []string{"cmd", "/c", fmt.Sprintf("powershell sleep %s && echo %s", r, r)}, r, false})
 		}
 		return tests
 	}
