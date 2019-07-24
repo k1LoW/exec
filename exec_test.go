@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -157,6 +158,19 @@ type testcase struct {
 
 func gentests(withSleepTest bool) []testcase {
 	tests := []testcase{}
+	if runtime.GOOS == "windows" {
+		r := random()
+		tests = append(tests, testcase{"echo", []string{"echo", r}, r, true})
+		r = random()
+		tests = append(tests, testcase{"cmd /c echo", []string{"cmd", "/c", fmt.Sprintf("echo %s", r)}, r, true})
+		if withSleepTest {
+			r = "123456"
+			tests = append(tests, testcase{"timeout", []string{"timeout", r, "/nobreak"}, r, false})
+			r = "654321"
+			tests = append(tests, testcase{"cmd /c timeout", []string{"cmd", "/c", fmt.Sprintf("timeout %s /nobreak && echo %s", r, r)}, r, false})
+		}
+		return tests
+	}
 	r := random()
 	tests = append(tests, testcase{"echo", []string{"echo", r}, r, true})
 	r = random()
