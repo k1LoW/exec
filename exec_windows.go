@@ -19,7 +19,6 @@ func command(name string, arg ...string) *exec.Cmd {
 	if cmd.SysProcAttr == nil {
 		cmd.SysProcAttr = &syscall.SysProcAttr{}
 	}
-	cmd.SysProcAttr.Setpgid = true // force setpgid
 	cmd.SysProcAttr.CreationFlags = syscall.CREATE_UNICODE_ENVIRONMENT | 0x00000200
 	return cmd
 }
