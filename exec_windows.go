@@ -22,7 +22,10 @@ func command(name string, arg ...string) *exec.Cmd {
 }
 
 func terminate(cmd *exec.Cmd, sig os.Signal) error {
-	return cmd.Process.Signal(sig)
+	if err := cmd.Process.Signal(sig); err != nil {
+		return killall(cmd) // fallback
+	}
+	return nil
 }
 
 func killall(cmd *exec.Cmd) error {
