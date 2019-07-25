@@ -3,8 +3,9 @@ package exec
 import (
 	"os"
 	"os/exec"
-	"strconv"
 	"syscall"
+
+	"github.com/mattn/psutil"
 )
 
 // MEMO: Sending Interrupt on Windows is not implemented.
@@ -30,5 +31,5 @@ func terminate(cmd *exec.Cmd, sig os.Signal) error {
 }
 
 func killall(cmd *exec.Cmd) error {
-	return exec.Command("taskkill", "/F", "/T", "/PID", strconv.Itoa(cmd.Process.Pid)).Run()
+	return psutil.TerminateTree(cmd.Process.Pid, -1)
 }

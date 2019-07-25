@@ -180,17 +180,17 @@ type testcase struct {
 func gentests(withSleepTest bool) []testcase {
 	tests := []testcase{}
 	if runtime.GOOS == "windows" {
-		r := random()
-		tests = append(tests, testcase{"echo", []string{"echo", r}, r, true})
-		r = random()
-		tests = append(tests, testcase{"cmd /c echo", []string{"cmd", "/c", fmt.Sprintf("echo %s", r)}, r, true})
-		if withSleepTest {
-			r = "123456"
-			tests = append(tests, testcase{"sleep", []string{stubCmd, "-sleep", r}, r, false})
-			r = "654321"
-			tests = append(tests, testcase{"cmd /c sleep", []string{"cmd", "/c", fmt.Sprintf("%s -sleep %s", stubCmd, r)}, r, false})
-		}
-		return tests
+		// r := random()
+		// tests = append(tests, testcase{"echo", []string{"echo", r}, r, true})
+		// r = random()
+		// tests = append(tests, testcase{"cmd /c echo", []string{"cmd", "/c", fmt.Sprintf("echo %s", r)}, r, true})
+		// if withSleepTest {
+		// 	r = "123456"
+		// 	tests = append(tests, testcase{"sleep", []string{stubCmd, "-sleep", r}, r, false})
+		// 	r = "654321"
+		// 	tests = append(tests, testcase{"cmd /c sleep", []string{"cmd", "/c", fmt.Sprintf("%s -sleep %s", stubCmd, r)}, r, false})
+		// }
+		// return tests
 	}
 	r := random()
 	tests = append(tests, testcase{"echo", []string{"echo", r}, r, true})
