@@ -15,6 +15,20 @@ import (
 	"time"
 )
 
+var (
+	stubCmd = `.\testdata\stubcmd.exe`
+)
+
+func init() {
+	if runtime.GOOS != "windows" {
+		return
+	}
+	err := exec.Command("go", "build", "-o", stubCmd, "testdata/stubcmd.go").Run()
+	if err != nil {
+		panic(err)
+	}
+}
+
 func TestCommand(t *testing.T) {
 	tests := gentests(false)
 	for _, tt := range tests {
@@ -171,10 +185,10 @@ func gentests(withSleepTest bool) []testcase {
 		r = random()
 		tests = append(tests, testcase{"cmd /c echo", []string{"cmd", "/c", fmt.Sprintf("echo %s", r)}, r, true})
 		if withSleepTest {
-			// r = "123456"
-			// tests = append(tests, testcase{"powershell sleep", []string{"powershell", "sleep", r}, r, false})
-			// r = "654321"
-			// tests = append(tests, testcase{"bash -c powershell sleep", []string{"cmd", "/c", fmt.Sprintf("powershell sleep %s && echo %s", r, r)}, r, false})
+			r = "123456"
+			tests = append(tests, testcase{"sleep", []string{stubCmd, "-sleep", r}, r, false})
+			r = "654321"
+			tests = append(tests, testcase{"cmd /c sleep", []string{"cmd", "/c", fmt.Sprintf("%s -sleep %s && echo %s", stubCmd, r, r)}, r, false})
 		}
 		return tests
 	}
