@@ -4,51 +4,42 @@ matrix:
     - go: 1.12.x
       os: linux
       env: GO111MODULE=on
-      before_install:
-        - echo $TRAVIS_GO_VERSION
-        - sudo pip install codecov
       after_success:
         - codecov
     - go: master
       os: linux
       env: GO111MODULE=on
-      before_install:
-        - echo $TRAVIS_GO_VERSION
-        - sudo pip install codecov
     - go: 1.12.x
       os: osx
       env: GO111MODULE=on
-      before_install:
-        - echo $TRAVIS_GO_VERSION
     - go: master
       os: osx
       env: GO111MODULE=on
-      before_install:
-        - echo $TRAVIS_GO_VERSION
     - go: 1.12.x
       os: windows
       env:
         - GO111MODULE=on
       before_install:
         - echo $TRAVIS_GO_VERSION
-        - echo $PATH
-        - echo $GOPATH
-        - ps aux
+        - echo $TERM
       script:
         - go test -v
-      after_script:
-        - ps aux
     - go: master
       os: windows
       env:
         - GO111MODULE=on
       before_install:
         - echo $TRAVIS_GO_VERSION
+        - echo $TERM
       script:
         - go test -v
       after_script:
         - ps aux
   allow_failures:
     - go: master
+before_install:
+  - echo $TRAVIS_GO_VERSION
+  - echo $TERM
+  - sudo pip install codecov
 script:
   - make ci

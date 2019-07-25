@@ -4,11 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"math/rand"
 	"os"
 	"os/exec"
 	"runtime"
-	"strconv"
 	"strings"
 	"syscall"
 	"testing"
@@ -16,12 +14,16 @@ import (
 )
 
 var (
-	stubCmd = `.\testdata\stubcmd.exe`
+	shellcmd  = `/bin/sh`
+	shellflag = "-c"
+	stubCmd   = `./testdata/stubcmd`
 )
 
 func init() {
-	if runtime.GOOS != "windows" {
-		return
+	if runtime.GOOS == "windows" {
+		shellcmd = "cmd"
+		shellflag = "/c"
+		stubCmd = `.\testdata\stubcmd.exe`
 	}
 	err := exec.Command("go", "build", "-o", stubCmd, "testdata/stubcmd.go").Run()
 	if err != nil {
@@ -41,14 +43,13 @@ func TestCommand(t *testing.T) {
 		cmd.Stderr = &stderr
 		err := cmd.Run()
 		if err != nil {
-			t.Fatalf("%s: %v", tt.name, err)
+			t.Errorf("%v: %v", tt.cmd, err)
 		}
 		if strings.TrimRight(stdout.String(), "\n\r") != tt.want {
-			t.Errorf("%s: want = %#v, got = %#v", tt.name, tt.want, stdout.String())
+			t.Errorf("%v: want = %#v, got = %#v", tt.cmd, tt.want, stdout.String())
 		}
-		out, err := exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
-		if err == nil || string(out) != "" {
-			t.Errorf("%s", "the process has not exited")
+		if checkprocess() {
+			t.Errorf("%v: %s", tt.cmd, "the process has not exited")
 		}
 	}
 }
@@ -66,14 +67,13 @@ func TestCommandContext(t *testing.T) {
 		cmd.Stderr = &stderr
 		err := cmd.Run()
 		if err != nil {
-			t.Fatalf("%s: %v", tt.name, err)
+			t.Fatalf("%v: %v", tt.cmd, err)
 		}
 		if strings.TrimRight(stdout.String(), "\n\r") != tt.want {
-			t.Errorf("%s: want = %#v, got = %#v", tt.name, tt.want, stdout.String())
+			t.Errorf("%v: want = %#v, got = %#v", tt.cmd, tt.want, stdout.String())
 		}
-		out, err := exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
-		if err == nil || string(out) != "" {
-			t.Errorf("%s", "the process has not exited")
+		if checkprocess() {
+			t.Errorf("%v: %s", tt.cmd, "the process has not exited")
 		}
 	}
 }
@@ -92,16 +92,17 @@ func TestCommandContextCancel(t *testing.T) {
 		cmd.Stderr = &stderr
 		err := cmd.Start()
 		if err != nil {
-			t.Fatalf("%s: %v", tt.name, err)
+			t.Fatalf("%v: %v", tt.cmd, err)
 		}
 		go func() {
 			cmd.Wait()
 		}()
-		time.Sleep(100 * time.Millisecond)
+		if !checkprocess() && !tt.processFinished {
+			t.Fatalf("%v: %s", tt.cmd, "the process has been exited")
+		}
 		cancel()
-		out, err := exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
-		if err == nil || string(out) != "" {
-			t.Errorf("%s", "the process has not exited")
+		if checkprocess() {
+			t.Errorf("%v: %s", tt.cmd, "the process has not exited")
 		}
 	}
 }
@@ -118,12 +119,14 @@ func TestTerminateCommand(t *testing.T) {
 		cmd.Stderr = &stderr
 		err := cmd.Start()
 		if err != nil {
-			t.Fatalf("%v", err)
+			t.Fatalf("%v: %v", tt.cmd, err)
 		}
 		go func() {
 			cmd.Wait()
 		}()
-		time.Sleep(500 * time.Millisecond)
+		if !checkprocess() && !tt.processFinished {
+			t.Fatalf("%v: %s", tt.cmd, "the process has been exited")
+		}
 		if runtime.GOOS == "windows" {
 			sig := os.Interrupt
 			err = TerminateCommand(cmd, sig)
@@ -132,11 +135,10 @@ func TestTerminateCommand(t *testing.T) {
 			err = TerminateCommand(cmd, sig)
 		}
 		if err != nil && !tt.processFinished {
-			t.Errorf("%s: %v", tt.name, err)
+			t.Errorf("%v: %v", tt.cmd, err)
 		}
-		out, err := exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
-		if err == nil || string(out) != "" {
-			t.Errorf("%s: %s", tt.name, "the process has not exited")
+		if checkprocess() {
+			t.Errorf("%v: %s", tt.cmd, "the process has not exited")
 		}
 	}
 }
@@ -153,19 +155,20 @@ func TestKillCommand(t *testing.T) {
 		cmd.Stderr = &stderr
 		err := cmd.Start()
 		if err != nil {
-			t.Fatalf("%v", err)
+			t.Fatalf("%v: %v", tt.cmd, err)
 		}
 		go func() {
 			cmd.Wait()
 		}()
-		time.Sleep(500 * time.Millisecond)
+		if !checkprocess() && !tt.processFinished {
+			t.Fatalf("%v: %s", tt.cmd, "the process has been exited")
+		}
 		err = KillCommand(cmd)
 		if err != nil && !tt.processFinished {
-			t.Fatalf("%s: %v", tt.name, err)
+			t.Fatalf("%v: %v", tt.cmd, err)
 		}
-		out, err := exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
-		if err == nil || string(out) != "" {
-			t.Errorf("%s: %s", tt.name, "the process has not exited")
+		if checkprocess() {
+			t.Errorf("%v: %s", tt.cmd, "the process has not exited")
 		}
 	}
 }
@@ -177,35 +180,27 @@ type testcase struct {
 	processFinished bool
 }
 
-func gentests(withSleepTest bool) []testcase {
-	tests := []testcase{}
+func checkprocess() bool {
+	time.Sleep(500 * time.Millisecond)
+	var (
+		out []byte
+		err error
+	)
 	if runtime.GOOS == "windows" {
-		// r := random()
-		// tests = append(tests, testcase{"echo", []string{"echo", r}, r, true})
-		// r = random()
-		// tests = append(tests, testcase{"cmd /c echo", []string{"cmd", "/c", fmt.Sprintf("echo %s", r)}, r, true})
-		// if withSleepTest {
-		// 	r = "123456"
-		// 	tests = append(tests, testcase{"sleep", []string{stubCmd, "-sleep", r}, r, false})
-		// 	r = "654321"
-		// 	tests = append(tests, testcase{"cmd /c sleep", []string{"cmd", "/c", fmt.Sprintf("%s -sleep %s", stubCmd, r)}, r, false})
-		// }
-		// return tests
+		out, err = exec.Command("cmd", "/c", "tasklist | grep stubcmd.exe | grep -v grep").Output()
+	} else {
+		out, err = exec.Command("bash", "-c", "ps aux | grep stubcmd | grep -v grep").Output()
 	}
-	r := random()
-	tests = append(tests, testcase{"echo", []string{"echo", r}, r, true})
-	r = random()
-	tests = append(tests, testcase{"bash -c echo", []string{"bash", "-c", fmt.Sprintf("echo %s", r)}, r, true})
-	if withSleepTest {
-		r = "123456"
-		tests = append(tests, testcase{"sleep", []string{"sleep", r}, r, false})
-		r = "654321"
-		tests = append(tests, testcase{"bash -c sleep", []string{"bash", "-c", fmt.Sprintf("sleep %s && echo %s", r, r)}, r, false})
-	}
-	return tests
+	return (err == nil || strings.TrimRight(string(out), "\n\r") != "")
 }
 
-func random() string {
-	rand.Seed(time.Now().UnixNano())
-	return strconv.Itoa(rand.Int())
+func gentests(withSleepTest bool) []testcase {
+	tests := []testcase{}
+	tests = append(tests, testcase{"echo", []string{stubCmd, "-echo", "!!!"}, "!!!", true})
+	tests = append(tests, testcase{"sh -c echo", []string{shellcmd, shellflag, fmt.Sprintf("%s -echo %s", stubCmd, "!!!")}, "!!!", true})
+	if withSleepTest {
+		tests = append(tests, testcase{"sleep", []string{stubCmd, "-sleep", "10", "-echo", "!!!"}, "!!!", false})
+		tests = append(tests, testcase{"sh -c sleep", []string{shellcmd, shellflag, fmt.Sprintf("%s -sleep %s -echo %s", stubCmd, "10", "!!!")}, "!!!", false})
+	}
+	return tests
 }

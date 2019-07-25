@@ -1,11 +1,13 @@
 package exec
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
+	"strings"
 	"syscall"
-
-	"github.com/mattn/psutil"
 )
 
 // MEMO: Sending Interrupt on Windows is not implemented.
@@ -24,6 +26,9 @@ func command(name string, arg ...string) *exec.Cmd {
 }
 
 func terminate(cmd *exec.Cmd, sig os.Signal) error {
+	if os.Getenv("TERM") == "cygwin" {
+		return killall(cmd) // fallback
+	}
 	if err := cmd.Process.Signal(sig); err != nil {
 		return killall(cmd) // fallback
 	}
@@ -31,5 +36,36 @@ func terminate(cmd *exec.Cmd, sig os.Signal) error {
 }
 
 func killall(cmd *exec.Cmd) error {
-	return psutil.TerminateTree(cmd.Process.Pid, -1)
+	var err error
+	wpid := cmd.Process.Pid
+	if os.Getenv("TERM") == "cygwin" {
+		wpid, err = winpid(cmd.Process.Pid)
+		if err != nil {
+			return err
+		}
+	}
+
+	return exec.Command("taskkill", "/F", "/T", "/PID", strconv.Itoa(wpid)).Run()
+	// return psutil.TerminateTree(cmd.Process.Pid, 0)
+}
+
+// winpid convert cygwin pid -> windows pid
+func winpid(pid int) (int, error) {
+	winpidCmd := exec.Command("cat", fmt.Sprintf("/proc/%d/winpid", pid))
+	out, err := winpidCmd.Output()
+	if err != nil {
+		out, err = exec.Command("tasklist", "/FI", fmt.Sprintf("PID eq %d", pid)).Output()
+		if err != nil {
+			return pid, err
+		}
+		if !strings.Contains(string(out), strconv.Itoa(pid)) {
+			return pid, errors.New("process does not exist")
+		}
+		return pid, nil
+	}
+	winpid, err := strconv.Atoi(strings.TrimRight(string(out), "\n\r"))
+	if err != nil {
+		return pid, err
+	}
+	return winpid, nil
 }
