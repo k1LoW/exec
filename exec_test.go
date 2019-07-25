@@ -46,8 +46,8 @@ func TestCommand(t *testing.T) {
 		if strings.TrimRight(stdout.String(), "\n\r") != tt.want {
 			t.Errorf("%s: want = %#v, got = %#v", tt.name, tt.want, stdout.String())
 		}
-		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
-		if err == nil {
+		out, err := exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
+		if err == nil || string(out) != "" {
 			t.Errorf("%s", "the process has not exited")
 		}
 	}
@@ -71,8 +71,8 @@ func TestCommandContext(t *testing.T) {
 		if strings.TrimRight(stdout.String(), "\n\r") != tt.want {
 			t.Errorf("%s: want = %#v, got = %#v", tt.name, tt.want, stdout.String())
 		}
-		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
-		if err == nil {
+		out, err := exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
+		if err == nil || string(out) != "" {
 			t.Errorf("%s", "the process has not exited")
 		}
 	}
@@ -99,8 +99,8 @@ func TestCommandContextCancel(t *testing.T) {
 		}()
 		time.Sleep(100 * time.Millisecond)
 		cancel()
-		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
-		if err == nil {
+		out, err := exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
+		if err == nil || string(out) != "" {
 			t.Errorf("%s", "the process has not exited")
 		}
 	}
@@ -134,8 +134,8 @@ func TestTerminateCommand(t *testing.T) {
 		if err != nil && !tt.processFinished {
 			t.Errorf("%s: %v", tt.name, err)
 		}
-		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
-		if err == nil {
+		out, err := exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
+		if err == nil || string(out) != "" {
 			t.Errorf("%s: %s", tt.name, "the process has not exited")
 		}
 	}
@@ -163,8 +163,8 @@ func TestKillCommand(t *testing.T) {
 		if err != nil && !tt.processFinished {
 			t.Fatalf("%s: %v", tt.name, err)
 		}
-		_, err = exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
-		if err == nil {
+		out, err := exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep", tt.want)).Output()
+		if err == nil || string(out) != "" {
 			t.Errorf("%s: %s", tt.name, "the process has not exited")
 		}
 	}
@@ -188,7 +188,7 @@ func gentests(withSleepTest bool) []testcase {
 			r = "123456"
 			tests = append(tests, testcase{"sleep", []string{stubCmd, "-sleep", r}, r, false})
 			r = "654321"
-			tests = append(tests, testcase{"cmd /c sleep", []string{"cmd", "/c", fmt.Sprintf("%s -sleep %s && echo %s", stubCmd, r, r)}, r, false})
+			tests = append(tests, testcase{"cmd /c sleep", []string{"cmd", "/c", fmt.Sprintf("%s -sleep %s", stubCmd, r)}, r, false})
 		}
 		return tests
 	}

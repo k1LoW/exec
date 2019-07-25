@@ -7,6 +7,7 @@ import (
 	"syscall"
 )
 
+// MEMO: Sending Interrupt on Windows is not implemented.
 var defaultSignal = os.Interrupt
 
 // Reference code:
