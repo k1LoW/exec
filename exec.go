@@ -53,12 +53,14 @@ func CommandContext(ctx context.Context, name string, arg ...string) *exec.Cmd {
 	return e.CommandContext(ctx, name, arg...)
 }
 
-// TerminateCommand send signal to cmd.Process.Pid process group
+// TerminateCommand send signal to cmd.Process.Pid process group ( if runtime.GOOS != 'windows' )
+// TerminateCommand send taskkill to cmd.Process.Pid ( if runtime.GOOS == 'windows' )
 func TerminateCommand(cmd *exec.Cmd, sig os.Signal) error {
 	return terminate(cmd, sig)
 }
 
 // KillCommand send syscall.SIGKILL to cmd.Process.Pid process group
+// KillCommand send taskkill to cmd.Process.Pid ( if runtime.GOOS == 'windows' )
 func KillCommand(cmd *exec.Cmd) error {
 	return killall(cmd)
 }
