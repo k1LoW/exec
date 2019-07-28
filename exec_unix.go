@@ -1,3 +1,5 @@
+// +build !windows
+
 package exec
 
 import (
@@ -30,7 +32,7 @@ func terminate(cmd *exec.Cmd, sig os.Signal) error {
 		return syscall.Kill(cmd.Process.Pid, syssig) // fallback
 	}
 	if syssig != syscall.SIGKILL && syssig != syscall.SIGCONT {
-		return syscall.Kill(-cmd.Process.Pid, syscall.SIGCONT)
+		_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGCONT)
 	}
 	return nil
 }
