@@ -1,0 +1,51 @@
+name: CI
+
+on: push
+
+jobs:
+  linux:
+    name: Test on Linux
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go_version: [1.16]
+    steps:
+      - name: Set up Go ${{ matrix.go_version }}
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go_version }}
+
+      - name: Install codecov
+        run: sudo pip install codecov
+
+      - name: Check out source code
+        uses: actions/checkout@v2
+
+      - name: Run tests
+        run: make ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run codecov
+        run: codecov
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  windows:
+    name: Test on Windows
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        go_version: [1.16]
+    steps:
+      - name: Set up Go ${{ matrix.go_version }}
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go_version }}
+
+      - name: Check out source code
+        uses: actions/checkout@v2
+
+      - name: Run tests
+        run: make ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
