@@ -35,6 +35,10 @@ func TestCommand(t *testing.T) {
 	tests := gentests(false)
 	for _, tt := range tests {
 		_ = killprocess()
+		if checkprocess() {
+			t.Fatalf("%s", "the process has not exited")
+		}
+
 		var (
 			stdout bytes.Buffer
 			stderr bytes.Buffer
@@ -84,6 +88,10 @@ func TestCommandContextCancel(t *testing.T) {
 	tests := gentests(true)
 	for _, tt := range tests {
 		_ = killprocess()
+		if checkprocess() {
+			t.Fatalf("%s", "the process has not exited")
+		}
+
 		var (
 			stdout bytes.Buffer
 			stderr bytes.Buffer
@@ -114,6 +122,11 @@ func TestCommandContextCancel(t *testing.T) {
 func TestTerminateCommand(t *testing.T) {
 	tests := gentests(true)
 	for _, tt := range tests {
+		_ = killprocess()
+		if checkprocess() {
+			t.Fatalf("%s", "the process has not exited")
+		}
+
 		var (
 			stdout bytes.Buffer
 			stderr bytes.Buffer
@@ -151,6 +164,10 @@ func TestKillCommand(t *testing.T) {
 	tests := gentests(true)
 	for _, tt := range tests {
 		_ = killprocess()
+		if checkprocess() {
+			t.Fatalf("%s", "the process has not exited")
+		}
+
 		var (
 			stdout bytes.Buffer
 			stderr bytes.Buffer
@@ -195,9 +212,6 @@ func checkprocess() bool {
 		out, err = exec.Command("cmd", "/c", "tasklist | grep stubcmd.exe | grep -v grep").Output()
 	} else {
 		out, err = exec.Command("bash", "-c", "ps aux | grep stubcmd | grep -v grep").Output()
-	}
-	if strings.TrimRight(string(out), "\n\r") != "" {
-		_, _ = fmt.Fprintf(os.Stderr, "%s", string(out))
 	}
 	return (err == nil || strings.TrimRight(string(out), "\n\r") != "")
 }

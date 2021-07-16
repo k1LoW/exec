@@ -13,8 +13,7 @@ var defaultSignal = syscall.SIGTERM
 // Reference code:
 // https://github.com/Songmu/timeout/blob/9710262dc02f66fdd69a6cd4c8143204006d5843/timeout_unix.go
 func command(name string, arg ...string) *exec.Cmd {
-	// #nosec
-	cmd := exec.Command(name, arg...)
+	cmd := exec.Command(name, arg...) // #nosec
 	if cmd.SysProcAttr == nil {
 		cmd.SysProcAttr = &syscall.SysProcAttr{}
 	}
