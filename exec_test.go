@@ -191,6 +191,9 @@ func checkprocess() bool {
 	} else {
 		out, err = exec.Command("bash", "-c", "ps aux | grep stubcmd | grep -v grep").Output()
 	}
+	if strings.TrimRight(string(out), "\n\r") != "" {
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", string(out))
+	}
 	return (err == nil || strings.TrimRight(string(out), "\n\r") != "")
 }
 
