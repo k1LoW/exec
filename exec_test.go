@@ -208,7 +208,7 @@ func killprocess() error {
 		err error
 	)
 	if runtime.GOOS == "windows" {
-		out, err = exec.Command("cmd", "/c", "taskkill /im stubcmd.exe").Output()
+		out, err = exec.Command("taskkill", "/im", "stubcmd.exe").Output()
 	} else {
 		out, err = exec.Command("bash", "-c", "ps aux | grep stubcmd | grep -v grep | xargs kill").Output()
 	}

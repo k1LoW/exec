@@ -47,5 +47,6 @@ jobs:
 
       - name: Run tests
         run: make ci
+        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
