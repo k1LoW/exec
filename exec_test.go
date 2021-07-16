@@ -34,6 +34,11 @@ func init() {
 func TestCommand(t *testing.T) {
 	tests := gentests(false)
 	for _, tt := range tests {
+		_ = killprocess()
+		if checkprocess() {
+			t.Fatalf("%s", "the process has not exited")
+		}
+
 		var (
 			stdout bytes.Buffer
 			stderr bytes.Buffer
@@ -57,6 +62,7 @@ func TestCommand(t *testing.T) {
 func TestCommandContext(t *testing.T) {
 	tests := gentests(false)
 	for _, tt := range tests {
+		_ = killprocess()
 		var (
 			stdout bytes.Buffer
 			stderr bytes.Buffer
@@ -81,23 +87,29 @@ func TestCommandContext(t *testing.T) {
 func TestCommandContextCancel(t *testing.T) {
 	tests := gentests(true)
 	for _, tt := range tests {
+		_ = killprocess()
+		if checkprocess() {
+			t.Fatalf("%s", "the process has not exited")
+		}
+
 		var (
 			stdout bytes.Buffer
 			stderr bytes.Buffer
 		)
 		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
 		cmd := CommandContext(ctx, tt.cmd[0], tt.cmd[1:]...)
 		cmd.Stdout = &stdout
 		cmd.Stderr = &stderr
 		err := cmd.Start()
 		if err != nil {
+			cancel()
 			t.Fatalf("%v: %v", tt.cmd, err)
 		}
 		go func() {
 			cmd.Wait()
 		}()
 		if !checkprocess() && !tt.processFinished {
+			cancel()
 			t.Fatalf("%v: %s", tt.cmd, "the process has been exited")
 		}
 		cancel()
@@ -110,6 +122,11 @@ func TestCommandContextCancel(t *testing.T) {
 func TestTerminateCommand(t *testing.T) {
 	tests := gentests(true)
 	for _, tt := range tests {
+		_ = killprocess()
+		if checkprocess() {
+			t.Fatalf("%s", "the process has not exited")
+		}
+
 		var (
 			stdout bytes.Buffer
 			stderr bytes.Buffer
@@ -146,6 +163,11 @@ func TestTerminateCommand(t *testing.T) {
 func TestKillCommand(t *testing.T) {
 	tests := gentests(true)
 	for _, tt := range tests {
+		_ = killprocess()
+		if checkprocess() {
+			t.Fatalf("%s", "the process has not exited")
+		}
+
 		var (
 			stdout bytes.Buffer
 			stderr bytes.Buffer
@@ -192,6 +214,25 @@ func checkprocess() bool {
 		out, err = exec.Command("bash", "-c", "ps aux | grep stubcmd | grep -v grep").Output()
 	}
 	return (err == nil || strings.TrimRight(string(out), "\n\r") != "")
+}
+
+func killprocess() error {
+	var (
+		out []byte
+		err error
+	)
+	if runtime.GOOS == "windows" {
+		out, err = exec.Command("taskkill", "/im", "stubcmd.exe").Output()
+	} else {
+		out, err = exec.Command("bash", "-c", "ps aux | grep stubcmd | grep -v grep | xargs kill").Output()
+	}
+	if err != nil {
+		if strings.TrimRight(string(out), "\n\r") != "" {
+			_, _ = fmt.Fprintf(os.Stderr, "%s", string(out))
+		}
+		return err
+	}
+	return nil
 }
 
 func gentests(withSleepTest bool) []testcase {

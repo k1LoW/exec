@@ -26,13 +26,7 @@ func command(name string, arg ...string) *exec.Cmd {
 }
 
 func terminate(cmd *exec.Cmd, sig os.Signal) error {
-	if os.Getenv("TERM") == "cygwin" {
-		return killall(cmd) // fallback
-	}
-	if err := cmd.Process.Signal(sig); err != nil {
-		return killall(cmd) // fallback
-	}
-	return nil
+	return killall(cmd) // fallback
 }
 
 func killall(cmd *exec.Cmd) error {
@@ -45,16 +39,16 @@ func killall(cmd *exec.Cmd) error {
 		}
 	}
 
-	return exec.Command("taskkill", "/F", "/T", "/PID", strconv.Itoa(wpid)).Run()
+	return exec.Command("taskkill", "/F", "/T", "/PID", strconv.Itoa(wpid)).Run() // #nosec
 	// return psutil.TerminateTree(cmd.Process.Pid, 0)
 }
 
 // winpid convert cygwin pid -> windows pid
 func winpid(pid int) (int, error) {
-	winpidCmd := exec.Command("cat", fmt.Sprintf("/proc/%d/winpid", pid))
+	winpidCmd := exec.Command("cat", fmt.Sprintf("/proc/%d/winpid", pid)) // #nosec
 	out, err := winpidCmd.Output()
 	if err != nil {
-		out, err = exec.Command("tasklist", "/FI", fmt.Sprintf("PID eq %d", pid)).Output()
+		out, err = exec.Command("tasklist", "/FI", fmt.Sprintf("PID eq %d", pid)).Output() // #nosec
 		if err != nil {
 			return pid, err
 		}

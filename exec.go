@@ -21,13 +21,11 @@ func (e *Exec) CommandContext(ctx context.Context, name string, arg ...string) *
 	}
 	cmd := command(name, arg...)
 	go func() {
-		select {
-		case <-ctx.Done():
-			err := terminate(cmd, e.Signal)
-			if err != nil {
-				// :thinking:
-				return
-			}
+		<-ctx.Done()
+		err := terminate(cmd, e.Signal)
+		if err != nil {
+			// :thinking:
+			return
 		}
 	}()
 	return cmd
