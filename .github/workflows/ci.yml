@@ -1,6 +1,10 @@
 name: CI
 
-on: push
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 
 jobs:
   linux:
@@ -8,15 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go_version: [1.16]
+        go_version: [1.17]
     steps:
       - name: Set up Go ${{ matrix.go_version }}
         uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go_version }}
-
-      - name: Install codecov
-        run: sudo pip install codecov
 
       - name: Check out source code
         uses: actions/checkout@v2
@@ -26,16 +27,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run codecov
-        run: codecov
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Run octocov
+        uses: k1LoW/octocov-action@v0
   windows:
     name: Test on Windows
     runs-on: windows-latest
     strategy:
       matrix:
-        go_version: [1.16]
+        go_version: [1.17]
     steps:
       - name: Set up Go ${{ matrix.go_version }}
         uses: actions/setup-go@v2
