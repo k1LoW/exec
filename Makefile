@@ -11,9 +11,9 @@ sec:
 	gosec ./...
 
 depsdev:
-	go get github.com/Songmu/ghch/cmd/ghch
-	go get github.com/Songmu/gocredits/cmd/gocredits
-	go get github.com/securego/gosec/cmd/gosec
+	go install github.com/Songmu/ghch/cmd/ghch@v0.10.2
+	go install github.com/Songmu/gocredits/cmd/gocredits@v0.2.0
+	go install github.com/securego/gosec/v2/cmd/gosec@v2.8.1
 
 prerelease:
 	ghch -w -N ${VER}
