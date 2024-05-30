@@ -23,4 +23,4 @@ prerelease:
 	git tag ${VER}
 
 release:
-	git push origin master --tag
+	git push origin main --tag
