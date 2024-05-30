@@ -198,31 +198,33 @@ func TestKillCommand(t *testing.T) {
 func TestCommandCancel(t *testing.T) {
 	tests := gentests(true)
 	for _, tt := range tests {
-		_ = killprocess()
-		if checkprocess() {
-			t.Fatalf("%s", "the process has not exited")
-		}
+		t.Run(fmt.Sprintf("%v", tt.cmd), func(t *testing.T) {
+			_ = killprocess()
+			if checkprocess() {
+				t.Fatal("the process has not exited")
+			}
 
-		var (
-			stdout bytes.Buffer
-			stderr bytes.Buffer
-		)
-		ctx, cancel := context.WithCancel(context.Background())
-		t.Cleanup(cancel)
-		cmd := CommandContext(ctx, tt.cmd[0], tt.cmd[1:]...)
-		cmd.Stdout = &stdout
-		cmd.Stderr = &stderr
-		err := cmd.Start()
-		if err != nil {
-			t.Fatalf("%v: %v", tt.cmd, err)
-		}
-		if !checkprocess() && !tt.processFinished {
-			t.Fatalf("%v: %s", tt.cmd, "the process has been exited")
-		}
-		_ = cmd.Cancel()
-		if checkprocess() {
-			t.Errorf("%v: %s", tt.cmd, "the process has not exited")
-		}
+			var (
+				stdout bytes.Buffer
+				stderr bytes.Buffer
+			)
+			ctx, cancel := context.WithCancel(context.Background())
+			t.Cleanup(cancel)
+			cmd := CommandContext(ctx, tt.cmd[0], tt.cmd[1:]...)
+			cmd.Stdout = &stdout
+			cmd.Stderr = &stderr
+			err := cmd.Start()
+			if err != nil {
+				t.Fatalf("%v: %v", tt.cmd, err)
+			}
+			if !checkprocess() && !tt.processFinished {
+				t.Errorf("%v: %s", tt.cmd, "the process has been exited")
+			}
+			_ = cmd.Cancel()
+			if checkprocess() {
+				t.Errorf("%v: %s", tt.cmd, "the process has not exited")
+			}
+		})
 	}
 }
 
@@ -234,7 +236,7 @@ type testcase struct {
 }
 
 func checkprocess() bool {
-	time.Sleep(time.Second)
+	time.Sleep(500 * time.Millisecond)
 	var (
 		out []byte
 		err error
