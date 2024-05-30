@@ -34,7 +34,9 @@ func init() {
 func TestCommand(t *testing.T) {
 	tests := gentests(false)
 	for _, tt := range tests {
-		_ = killprocess()
+		if err := killprocess(); err != nil {
+			t.Fatal(err)
+		}
 		if checkprocess() {
 			t.Fatalf("%s", "the process has not exited")
 		}
@@ -87,7 +89,9 @@ func TestCommandContext(t *testing.T) {
 func TestCommandContextCancel(t *testing.T) {
 	tests := gentests(true)
 	for _, tt := range tests {
-		_ = killprocess()
+		if err := killprocess(); err != nil {
+			t.Fatal(err)
+		}
 		if checkprocess() {
 			t.Fatalf("%s", "the process has not exited")
 		}
@@ -122,7 +126,9 @@ func TestCommandContextCancel(t *testing.T) {
 func TestTerminateCommand(t *testing.T) {
 	tests := gentests(true)
 	for _, tt := range tests {
-		_ = killprocess()
+		if err := killprocess(); err != nil {
+			t.Fatal(err)
+		}
 		if checkprocess() {
 			t.Fatalf("%s", "the process has not exited")
 		}
@@ -163,7 +169,9 @@ func TestTerminateCommand(t *testing.T) {
 func TestKillCommand(t *testing.T) {
 	tests := gentests(true)
 	for _, tt := range tests {
-		_ = killprocess()
+		if err := killprocess(); err != nil {
+			t.Fatal(err)
+		}
 		if checkprocess() {
 			t.Fatalf("%s", "the process has not exited")
 		}
@@ -198,7 +206,9 @@ func TestKillCommand(t *testing.T) {
 func TestCommandCancel(t *testing.T) {
 	tests := gentests(true)
 	for _, tt := range tests {
-		_ = killprocess()
+		if err := killprocess(); err != nil {
+			t.Fatal(err)
+		}
 		if checkprocess() {
 			t.Fatalf("%s", "the process has not exited")
 		}
