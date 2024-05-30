@@ -1,8 +1,10 @@
+//go:build !windows
 // +build !windows
 
 package exec
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"syscall"
@@ -14,6 +16,15 @@ var defaultSignal = syscall.SIGTERM
 // https://github.com/Songmu/timeout/blob/9710262dc02f66fdd69a6cd4c8143204006d5843/timeout_unix.go
 func command(name string, arg ...string) *exec.Cmd {
 	cmd := exec.Command(name, arg...) // #nosec
+	if cmd.SysProcAttr == nil {
+		cmd.SysProcAttr = &syscall.SysProcAttr{}
+	}
+	cmd.SysProcAttr.Setpgid = true // force setpgid
+	return cmd
+}
+
+func commandContext(ctx context.Context, name string, arg ...string) *exec.Cmd {
+	cmd := exec.CommandContext(ctx, name, arg...) // #nosec
 	if cmd.SysProcAttr == nil {
 		cmd.SysProcAttr = &syscall.SysProcAttr{}
 	}

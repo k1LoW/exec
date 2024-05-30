@@ -195,6 +195,39 @@ func TestKillCommand(t *testing.T) {
 	}
 }
 
+func TestCommandCancel(t *testing.T) {
+	tests := gentests(true)
+	for _, tt := range tests {
+		_ = killprocess()
+		if checkprocess() {
+			t.Fatalf("%s", "the process has not exited")
+		}
+
+		var (
+			stdout bytes.Buffer
+			stderr bytes.Buffer
+		)
+		ctx, cancel := context.WithCancel(context.Background())
+		t.Cleanup(cancel)
+		cmd := CommandContext(ctx, tt.cmd[0], tt.cmd[1:]...)
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+		err := cmd.Start()
+		if err != nil {
+			t.Fatalf("%v: %v", tt.cmd, err)
+		}
+		if !checkprocess() && !tt.processFinished {
+			t.Fatalf("%v: %s", tt.cmd, "the process has been exited")
+		}
+		if err := cmd.Cancel(); err != nil {
+			t.Errorf("%v: %v", tt.cmd, err)
+		}
+		if checkprocess() {
+			t.Errorf("%v: %s", tt.cmd, "the process has not exited")
+		}
+	}
+}
+
 type testcase struct {
 	name            string
 	cmd             []string
