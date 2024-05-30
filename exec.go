@@ -20,14 +20,6 @@ func (e *Exec) CommandContext(ctx context.Context, name string, arg ...string) *
 		e.Signal = defaultSignal
 	}
 	cmd := commandContext(ctx, name, arg...)
-	go func() {
-		<-ctx.Done()
-		err := terminate(cmd, e.Signal)
-		if err != nil {
-			// :thinking:
-			return
-		}
-	}()
 	cmd.Cancel = func() error {
 		return terminate(cmd, e.Signal)
 	}
