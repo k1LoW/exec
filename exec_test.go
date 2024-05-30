@@ -195,6 +195,43 @@ func TestKillCommand(t *testing.T) {
 	}
 }
 
+func TestCommandCancel(t *testing.T) {
+	tests := gentests(true)
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%v", tt.cmd), func(t *testing.T) {
+			_ = killprocess()
+			if checkprocess() {
+				t.Fatal("the process has not exited")
+			}
+
+			var (
+				stdout bytes.Buffer
+				stderr bytes.Buffer
+			)
+			ctx, cancel := context.WithCancel(context.Background())
+			t.Cleanup(cancel)
+			cmd := CommandContext(ctx, tt.cmd[0], tt.cmd[1:]...)
+			cmd.Stdout = &stdout
+			cmd.Stderr = &stderr
+			err := cmd.Start()
+			if err != nil {
+				t.Fatalf("%v: %v", tt.cmd, err)
+			}
+			go func() {
+				cmd.Wait()
+			}()
+			if !checkprocess() && !tt.processFinished {
+				t.Errorf("%v: %s", tt.cmd, "the process has been exited")
+			}
+			_ = cmd.Cancel()
+
+			if checkprocess() {
+				t.Errorf("%v: %s", tt.cmd, "the process has not exited")
+			}
+		})
+	}
+}
+
 type testcase struct {
 	name            string
 	cmd             []string
@@ -213,6 +250,7 @@ func checkprocess() bool {
 	} else {
 		out, err = exec.Command("bash", "-c", "ps aux | grep stubcmd | grep -v grep").Output()
 	}
+
 	return (err == nil || strings.TrimRight(string(out), "\n\r") != "")
 }
 
@@ -224,8 +262,9 @@ func killprocess() error {
 	if runtime.GOOS == "windows" {
 		out, err = exec.Command("taskkill", "/im", "stubcmd.exe").Output()
 	} else {
-		out, err = exec.Command("bash", "-c", "ps aux | grep stubcmd | grep -v grep | xargs kill").Output()
+		out, err = exec.Command("bash", "-c", "ps aux | grep stubcmd | grep -v grep | xargs kill -9").Output()
 	}
+
 	if err != nil {
 		if strings.TrimRight(string(out), "\n\r") != "" {
 			_, _ = fmt.Fprintf(os.Stderr, "%s", string(out))

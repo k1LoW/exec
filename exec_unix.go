@@ -1,8 +1,10 @@
+//go:build !windows
 // +build !windows
 
 package exec
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"syscall"
@@ -21,6 +23,15 @@ func command(name string, arg ...string) *exec.Cmd {
 	return cmd
 }
 
+func commandContext(ctx context.Context, name string, arg ...string) *exec.Cmd {
+	cmd := exec.CommandContext(ctx, name, arg...) // #nosec
+	if cmd.SysProcAttr == nil {
+		cmd.SysProcAttr = &syscall.SysProcAttr{}
+	}
+	cmd.SysProcAttr.Setpgid = true // force setpgid
+	return cmd
+}
+
 func terminate(cmd *exec.Cmd, sig os.Signal) error {
 	syssig, ok := sig.(syscall.Signal)
 	if !ok {
@@ -31,7 +42,7 @@ func terminate(cmd *exec.Cmd, sig os.Signal) error {
 	}
 	err := syscall.Kill(-cmd.Process.Pid, syssig)
 	if err != nil {
-		return syscall.Kill(cmd.Process.Pid, syssig) // fallback
+		return cmd.Process.Signal(syssig) // fallback
 	}
 	if syssig != syscall.SIGKILL && syssig != syscall.SIGCONT {
 		_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGCONT)

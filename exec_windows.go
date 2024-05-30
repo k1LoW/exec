@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -18,6 +19,16 @@ var defaultSignal = os.Interrupt
 func command(name string, arg ...string) *exec.Cmd {
 	// #nosec
 	cmd := exec.Command(name, arg...)
+	if cmd.SysProcAttr == nil {
+		cmd.SysProcAttr = &syscall.SysProcAttr{}
+	}
+	cmd.SysProcAttr.CreationFlags = syscall.CREATE_UNICODE_ENVIRONMENT | 0x00000200
+	return cmd
+}
+
+func commandContext(ctx context.Context, name string, arg ...string) *exec.Cmd {
+	// #nosec
+	cmd := exec.CommandContext(ctx, name, arg...)
 	if cmd.SysProcAttr == nil {
 		cmd.SysProcAttr = &syscall.SysProcAttr{}
 	}
