@@ -217,10 +217,14 @@ func TestCommandCancel(t *testing.T) {
 			if err != nil {
 				t.Fatalf("%v: %v", tt.cmd, err)
 			}
+			go func() {
+				cmd.Wait()
+			}()
 			if !checkprocess() && !tt.processFinished {
 				t.Errorf("%v: %s", tt.cmd, "the process has been exited")
 			}
 			_ = cmd.Cancel()
+
 			if checkprocess() {
 				t.Errorf("%v: %s", tt.cmd, "the process has not exited")
 			}
@@ -246,6 +250,7 @@ func checkprocess() bool {
 	} else {
 		out, err = exec.Command("bash", "-c", "ps aux | grep stubcmd | grep -v grep").Output()
 	}
+
 	return (err == nil || strings.TrimRight(string(out), "\n\r") != "")
 }
 
@@ -257,8 +262,9 @@ func killprocess() error {
 	if runtime.GOOS == "windows" {
 		out, err = exec.Command("taskkill", "/im", "stubcmd.exe").Output()
 	} else {
-		out, err = exec.Command("bash", "-c", "ps aux | grep stubcmd | grep -v grep | xargs kill").Output()
+		out, err = exec.Command("bash", "-c", "ps aux | grep stubcmd | grep -v grep | xargs kill -9").Output()
 	}
+
 	if err != nil {
 		if strings.TrimRight(string(out), "\n\r") != "" {
 			_, _ = fmt.Fprintf(os.Stderr, "%s", string(out))
