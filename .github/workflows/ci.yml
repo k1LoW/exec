@@ -1,15 +1,20 @@
-name: CI
+name: build
 
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
 
 jobs:
   linux:
     name: Test on Linux
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
@@ -19,16 +24,22 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Run lint
+        uses: reviewdog/action-golangci-lint@v2
+        with:
+          fail_level: warning
+          go_version_file: go.mod
+
       - name: Run tests
         run: make ci
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run octocov
         uses: k1LoW/octocov-action@v1
   windows:
     name: Test on Windows
     runs-on: windows-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
@@ -41,5 +52,3 @@ jobs:
       - name: Run tests
         run: make ci
         shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
