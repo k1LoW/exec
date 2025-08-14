@@ -3,6 +3,7 @@ package exec
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -311,14 +312,14 @@ func TestExitError(t *testing.T) {
 		}
 
 		// Test that the error can be type asserted to exec.ExitError (our alias)
-		exitError, ok := err.(*ExitError)
-		if !ok {
+		var exitError *ExitError
+		if !errors.As(err, &exitError) {
 			t.Fatalf("Expected error to be *exec.ExitError, got %T", err)
 		}
 
 		// Test that the error can also be type asserted to os/exec.ExitError
-		osExitError, ok := err.(*exec.ExitError)
-		if !ok {
+		var osExitError *exec.ExitError
+		if !errors.As(err, &osExitError) {
 			t.Fatalf("Expected error to be *os/exec.ExitError, got %T", err)
 		}
 
@@ -351,8 +352,8 @@ func TestExitError(t *testing.T) {
 			t.Fatal("Expected command to fail with exit code 42")
 		}
 
-		exitError, ok := err.(*ExitError)
-		if !ok {
+		var exitError *ExitError
+		if !errors.As(err, &exitError) {
 			t.Fatalf("Expected error to be *exec.ExitError, got %T", err)
 		}
 
@@ -373,8 +374,8 @@ func TestExitError(t *testing.T) {
 		}
 
 		// Test ProcessState.ExitCode() method
-		if exitError.ProcessState.ExitCode() != 42 {
-			t.Errorf("Expected ProcessState.ExitCode() to return 42, got %d", exitError.ProcessState.ExitCode())
+		if exitError.ExitCode() != 42 {
+			t.Errorf("Expected ProcessState.ExitCode() to return 42, got %d", exitError.ExitCode())
 		}
 	})
 
@@ -394,8 +395,8 @@ func TestExitError(t *testing.T) {
 		}
 
 		// Verify the alias works with CommandContext as well
-		exitError, ok := err.(*ExitError)
-		if !ok {
+		var exitError *ExitError
+		if !errors.As(err, &exitError) {
 			t.Fatalf("Expected error to be *exec.ExitError, got %T", err)
 		}
 
