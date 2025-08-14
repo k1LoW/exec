@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+type ExitError = exec.ExitError
+
 // Exec represents an command executer.
 type Exec struct {
 	Signal          os.Signal
