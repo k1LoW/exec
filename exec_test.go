@@ -43,7 +43,7 @@ func TestCommand(t *testing.T) {
 			stdout bytes.Buffer
 			stderr bytes.Buffer
 		)
-		cmd := Command(tt.cmd[0], tt.cmd[1:]...)
+		cmd := Command(tt.cmd[0], tt.cmd[1:]...) //nolint:gosec
 		cmd.Stdout = &stdout
 		cmd.Stderr = &stderr
 		err := cmd.Run()
@@ -68,7 +68,7 @@ func TestCommandContext(t *testing.T) {
 			stderr bytes.Buffer
 		)
 		ctx := context.Background()
-		cmd := CommandContext(ctx, tt.cmd[0], tt.cmd[1:]...)
+		cmd := CommandContext(ctx, tt.cmd[0], tt.cmd[1:]...) //nolint:gosec
 		cmd.Stdout = &stdout
 		cmd.Stderr = &stderr
 		err := cmd.Run()
@@ -97,7 +97,7 @@ func TestCommandContextCancel(t *testing.T) {
 			stderr bytes.Buffer
 		)
 		ctx, cancel := context.WithCancel(context.Background())
-		cmd := CommandContext(ctx, tt.cmd[0], tt.cmd[1:]...)
+		cmd := CommandContext(ctx, tt.cmd[0], tt.cmd[1:]...) //nolint:gosec
 		cmd.Stdout = &stdout
 		cmd.Stderr = &stderr
 		err := cmd.Start()
@@ -106,7 +106,7 @@ func TestCommandContextCancel(t *testing.T) {
 			t.Fatalf("%v: %v", tt.cmd, err)
 		}
 		go func() {
-			cmd.Wait()
+			_ = cmd.Wait()
 		}()
 		if !checkprocess() && !tt.processFinished {
 			cancel()
@@ -131,7 +131,7 @@ func TestTerminateCommand(t *testing.T) {
 			stdout bytes.Buffer
 			stderr bytes.Buffer
 		)
-		cmd := Command(tt.cmd[0], tt.cmd[1:]...)
+		cmd := Command(tt.cmd[0], tt.cmd[1:]...) //nolint:gosec
 		cmd.Stdout = &stdout
 		cmd.Stderr = &stderr
 		err := cmd.Start()
@@ -139,7 +139,7 @@ func TestTerminateCommand(t *testing.T) {
 			t.Fatalf("%v: %v", tt.cmd, err)
 		}
 		go func() {
-			cmd.Wait()
+			_ = cmd.Wait()
 		}()
 		if !checkprocess() && !tt.processFinished {
 			t.Fatalf("%v: %s", tt.cmd, "the process has been exited")
@@ -172,7 +172,7 @@ func TestKillCommand(t *testing.T) {
 			stdout bytes.Buffer
 			stderr bytes.Buffer
 		)
-		cmd := Command(tt.cmd[0], tt.cmd[1:]...)
+		cmd := Command(tt.cmd[0], tt.cmd[1:]...) //nolint:gosec
 		cmd.Stdout = &stdout
 		cmd.Stderr = &stderr
 		err := cmd.Start()
@@ -180,7 +180,7 @@ func TestKillCommand(t *testing.T) {
 			t.Fatalf("%v: %v", tt.cmd, err)
 		}
 		go func() {
-			cmd.Wait()
+			_ = cmd.Wait()
 		}()
 		if !checkprocess() && !tt.processFinished {
 			t.Fatalf("%v: %s", tt.cmd, "the process has been exited")
@@ -210,7 +210,7 @@ func TestCommandCancel(t *testing.T) {
 			)
 			ctx, cancel := context.WithCancel(context.Background())
 			t.Cleanup(cancel)
-			cmd := CommandContext(ctx, tt.cmd[0], tt.cmd[1:]...)
+			cmd := CommandContext(ctx, tt.cmd[0], tt.cmd[1:]...) //nolint:gosec
 			cmd.Stdout = &stdout
 			cmd.Stderr = &stderr
 			err := cmd.Start()
@@ -218,7 +218,7 @@ func TestCommandCancel(t *testing.T) {
 				t.Fatalf("%v: %v", tt.cmd, err)
 			}
 			go func() {
-				cmd.Wait()
+				_ = cmd.Wait()
 			}()
 			if !checkprocess() && !tt.processFinished {
 				t.Errorf("%v: %s", tt.cmd, "the process has been exited")
