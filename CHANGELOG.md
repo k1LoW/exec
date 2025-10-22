@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.4.1](https://github.com/k1LoW/exec/compare/v0.4.0...v0.4.1) - 2025-10-22
+### Other Changes
+- chore(deps): bump actions/setup-go from 5 to 6 in the dependencies group by @dependabot[bot] in https://github.com/k1LoW/exec/pull/10
+- chore: setup tagpr labels by @k1LoW in https://github.com/k1LoW/exec/pull/11
+
 ## [v0.4.0](https://github.com/k1LoW/exec/compare/v0.3.0...v0.4.0) - 2025-08-14
 ### New Features 🎉
 - feat: add Type alias `ExitError` by @k1LoW in https://github.com/k1LoW/exec/pull/7
