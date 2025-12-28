@@ -1,3 +1,3 @@
 module github.com/k1LoW/exec
 
-go 1.22
+go 1.24
