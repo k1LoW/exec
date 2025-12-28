@@ -7,7 +7,19 @@ import (
 	"time"
 )
 
-type ExitError = exec.ExitError
+// Type aliases for os/exec types.
+type (
+	Cmd       = exec.Cmd
+	Error     = exec.Error
+	ExitError = exec.ExitError
+)
+
+// Variable aliases for os/exec variables.
+var (
+	ErrDot       = exec.ErrDot
+	ErrNotFound  = exec.ErrNotFound
+	ErrWaitDelay = exec.ErrWaitDelay
+)
 
 // Exec represents an command executer.
 type Exec struct {
