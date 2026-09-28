@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.5.1](https://github.com/k1LoW/exec/compare/v0.5.0...v0.5.1) - 2026-09-28
+
+### Other Changes
+- chore(deps): bump actions/checkout from 6 to 7 in the dependencies group by @dependabot[bot] in https://github.com/k1LoW/exec/pull/15
+- ci: generate CREDITS with gocredits v1.0.0 from a make target by @k1LoW in https://github.com/k1LoW/exec/pull/20
+
 ## [v0.5.0](https://github.com/k1LoW/exec/compare/v0.4.0...v0.5.0) - 2025-12-28
 ### New Features 🎉
 - feat: add type and variable aliases for os/exec compatibility by @k1LoW in https://github.com/k1LoW/exec/pull/14
